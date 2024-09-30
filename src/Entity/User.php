@@ -50,9 +50,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\OneToMany(targetEntity: Forum::class, mappedBy: 'user')]
     private Collection $forums;
 
+    /**
+     * @var Collection<int, Team>
+     */
+    #[ORM\OneToMany(targetEntity: Team::class, mappedBy: 'owner')]
+    private Collection $ownedTeams;
+
+    /**
+     * @var Collection<int, Team>
+     */
+    #[ORM\ManyToMany(targetEntity: Team::class, mappedBy: 'members')]
+    private Collection $teams;
+
     public function __construct()
     {
         $this->forums = new ArrayCollection();
+        $this->ownedTeams = new ArrayCollection();
+        $this->teams = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -189,6 +203,63 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
             if ($forum->getUser() === $this) {
                 $forum->setUser(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Team>
+     */
+    public function getOwnedTeams(): Collection
+    {
+        return $this->ownedTeams;
+    }
+
+    public function addOwnedTeam(Team $ownedTeam): static
+    {
+        if (!$this->ownedTeams->contains($ownedTeam)) {
+            $this->ownedTeams->add($ownedTeam);
+            $ownedTeam->setOwner($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOwnedTeam(Team $ownedTeam): static
+    {
+        if ($this->ownedTeams->removeElement($ownedTeam)) {
+            // set the owning side to null (unless already changed)
+            if ($ownedTeam->getOwner() === $this) {
+                $ownedTeam->setOwner(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Team>
+     */
+    public function getTeams(): Collection
+    {
+        return $this->teams;
+    }
+
+    public function addTeam(Team $team): static
+    {
+        if (!$this->teams->contains($team)) {
+            $this->teams->add($team);
+            $team->addMember($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTeam(Team $team): static
+    {
+        if ($this->teams->removeElement($team)) {
+            $team->removeMember($this);
         }
 
         return $this;

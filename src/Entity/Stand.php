@@ -2,14 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\ForumRepository;
+use App\Repository\StandRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: ForumRepository::class)]
-class Forum
+#[ORM\Entity(repositoryClass: StandRepository::class)]
+class Stand
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -25,21 +25,24 @@ class Forum
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $location = null;
+    #[ORM\Column]
+    private ?int $capacity = null;
 
-    #[ORM\ManyToOne(inversedBy: 'forums')]
-    private ?User $user = null;
+    #[ORM\Column(type: Types::TIME_MUTABLE)]
+    private ?\DateTimeInterface $duration = null;
+
+    #[ORM\ManyToOne(inversedBy: 'stands')]
+    private ?Forum $forum = null;
 
     /**
-     * @var Collection<int, Stand>
+     * @var Collection<int, Timeslot>
      */
-    #[ORM\OneToMany(targetEntity: Stand::class, mappedBy: 'forum')]
-    private Collection $stands;
+    #[ORM\OneToMany(targetEntity: Timeslot::class, mappedBy: 'stand')]
+    private Collection $timeSlots;
 
     public function __construct()
     {
-        $this->stands = new ArrayCollection();
+        $this->timeSlots = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -90,54 +93,66 @@ class Forum
         return $this;
     }
 
-    public function getLocation(): ?string
+    public function getCapacity(): ?int
     {
-        return $this->location;
+        return $this->capacity;
     }
 
-    public function setLocation(string $location): static
+    public function setCapacity(int $capacity): static
     {
-        $this->location = $location;
+        $this->capacity = $capacity;
 
         return $this;
     }
 
-    public function getUser(): ?User
+    public function getDuration(): ?\DateTimeInterface
     {
-        return $this->user;
+        return $this->duration;
     }
 
-    public function setUser(?User $user): static
+    public function setDuration(\DateTimeInterface $duration): static
     {
-        $this->user = $user;
+        $this->duration = $duration;
+
+        return $this;
+    }
+
+    public function getForum(): ?Forum
+    {
+        return $this->forum;
+    }
+
+    public function setForum(?Forum $forum): static
+    {
+        $this->forum = $forum;
 
         return $this;
     }
 
     /**
-     * @return Collection<int, Stand>
+     * @return Collection<int, Timeslot>
      */
-    public function getStands(): Collection
+    public function getTimeSlots(): Collection
     {
-        return $this->stands;
+        return $this->timeSlots;
     }
 
-    public function addStand(Stand $stand): static
+    public function addTimeSlot(Timeslot $timeSlot): static
     {
-        if (!$this->stands->contains($stand)) {
-            $this->stands->add($stand);
-            $stand->setForum($this);
+        if (!$this->timeSlots->contains($timeSlot)) {
+            $this->timeSlots->add($timeSlot);
+            $timeSlot->setStand($this);
         }
 
         return $this;
     }
 
-    public function removeStand(Stand $stand): static
+    public function removeTimeSlot(Timeslot $timeSlot): static
     {
-        if ($this->stands->removeElement($stand)) {
+        if ($this->timeSlots->removeElement($timeSlot)) {
             // set the owning side to null (unless already changed)
-            if ($stand->getForum() === $this) {
-                $stand->setForum(null);
+            if ($timeSlot->getStand() === $this) {
+                $timeSlot->setStand(null);
             }
         }
 
