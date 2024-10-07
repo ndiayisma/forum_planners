@@ -17,6 +17,8 @@ final class ForumController extends AbstractController
     #[Route(name: 'app_forum_index', methods: ['GET'])]
     public function index(ForumRepository $forumRepository): Response
     {
+        $user = $this->getUser();
+        //faire un findby(user) pour afficher les forums de l'utilisateur
         return $this->render('forum/index.html.twig', [
             'forums' => $forumRepository->findAll(),
         ]);
@@ -42,9 +44,20 @@ final class ForumController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_forum_show', methods: ['GET'])]
-    public function show(Forum $forum): Response
+    #[Route('/{id}', name: 'app_forum_show', methods: ['GET', 'POST'])]
+    public function show(Request $request,Forum $forum): Response
     {
+        $stand = new Stand();
+        $stand->setForum($forum);
+        //standForm = $this->createForm(StandType::class, $stand);
+        //standForm->handleRequest($request);
+
+        //if ($standForm->isSubmitted() && $standForm->isValid()) {
+        //    $entityManager->persist($stand);
+        //    $entityManager->flush();
+
+        //    return $this->redirectToRoute('app_forum_index', [], Response::HTTP_SEE_OTHER); mettre un getID
+
         return $this->render('forum/show.html.twig', [
             'forum' => $forum,
         ]);

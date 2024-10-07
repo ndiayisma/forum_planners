@@ -40,9 +40,16 @@ class Stand
     #[ORM\OneToMany(targetEntity: Timeslot::class, mappedBy: 'stand')]
     private Collection $timeSlots;
 
+    /**
+     * @var Collection<int, Evaluation>
+     */
+    #[ORM\OneToMany(targetEntity: Evaluation::class, mappedBy: 'stand')]
+    private Collection $evaluations;
+
     public function __construct()
     {
         $this->timeSlots = new ArrayCollection();
+        $this->evaluations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -157,5 +164,48 @@ class Stand
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Evaluation>
+     */
+    public function getEvaluations(): Collection
+    {
+        return $this->evaluations;
+    }
+
+    public function addEvaluation(Evaluation $evaluation): static
+    {
+        if (!$this->evaluations->contains($evaluation)) {
+            $this->evaluations->add($evaluation);
+            $evaluation->setStand($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEvaluation(Evaluation $evaluation): static
+    {
+        if ($this->evaluations->removeElement($evaluation)) {
+            // set the owning side to null (unless already changed)
+            if ($evaluation->getStand() === $this) {
+                $evaluation->setStand(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getAverageRating(): float
+    {
+        $totalRating = 0;
+        $totalEvaluations = 0;
+
+        foreach ($this->evaluations as $evaluation) {
+            $totalRating += $evaluation->getNote();
+            $totalEvaluations++;
+        }
+
+        return $totalEvaluations > 0 ? $totalRating / $totalEvaluations : 0;
     }
 }
