@@ -3,13 +3,16 @@
 namespace App\Controller;
 
 use App\Entity\Forum;
+use App\Entity\Stand;
 use App\Form\ForumType;
+use App\Form\StandType;
 use App\Repository\ForumRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/forum')]
 final class ForumController extends AbstractController
@@ -45,25 +48,30 @@ final class ForumController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_forum_show', methods: ['GET', 'POST'])]
-    public function show(Request $request,Forum $forum): Response
+    public function show(Request $request, Forum $forum, Stand $stand, EntityManagerInterface $entityManager): Response
     {
         $stand = new Stand();
         $stand->setForum($forum);
-        //standForm = $this->createForm(StandType::class, $stand);
-        //standForm->handleRequest($request);
+        $standForm = $this->createForm(StandType::class, $stand);
+        $standForm->handleRequest($request);
 
-        //if ($standForm->isSubmitted() && $standForm->isValid()) {
-        //    $entityManager->persist($stand);
-        //    $entityManager->flush();
+        if ($standForm->isSubmitted() && $standForm->isValid()) {
+            $entityManager->persist($stand);
+            $entityManager->flush();
 
-        //    return $this->redirectToRoute('app_forum_index', [], Response::HTTP_SEE_OTHER); mettre un getID
+            return $this->redirectToRoute('app_forum_show', ['id' => $forum->getId()], Response::HTTP_SEE_OTHER);
+
+
+        }
 
         return $this->render('forum/show.html.twig', [
             'forum' => $forum,
+            'standForm' => $standForm,
         ]);
     }
 
     #[Route('/{id}/edit', name: 'app_forum_edit', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_FORUM_ORGANIZER')]
     public function edit(Request $request, Forum $forum, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(ForumType::class, $forum);
@@ -82,6 +90,7 @@ final class ForumController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_forum_delete', methods: ['POST'])]
+    #[IsGranted('ROLE_FORUM_ORGANIZER')]
     public function delete(Request $request, Forum $forum, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$forum->getId(), $request->getPayload()->getString('_token'))) {

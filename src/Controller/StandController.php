@@ -25,7 +25,7 @@ final class StandController extends AbstractController
     }
 
     #[Route('/new', name: 'app_stand_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, Stand $stand): Response
     {
         $stand = new Stand();
         $form = $this->createForm(StandType::class, $stand);
