@@ -47,6 +47,12 @@ security:
         - { path: ^/2fa, role: IS_AUTHENTICATED_2FA_IN_PROGRESS }
         # Other rules may follow here...
 
+    role_hierarchy:
+        ROLE_FORUM_ATTENDEE: ROLE_USER
+        ROLE_FORUM_ORGANIZER: ROLE_USER
+        ROLE_ADMIN: [ROLE_FORUM_ORGANIZER, ROLE_FORUM_ATTENDEE]
+        ROLE_SUPER_ADMIN: [ ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH ]
+
 when@test:
     security:
         password_hashers:
